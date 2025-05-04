@@ -8,6 +8,7 @@ COPY app ./app
 
 RUN --mount=type=secret,id=deep_tranlate_api_key,env=DEEP_TRANSLATE_API_KEY
 RUN pip install poetry
+RUN poetry check
 RUN poetry install
 
-CMD ["poetry", "run", "python", "-m", "app.main"]
+ENTRYPOINT ["poetry", "run", "python", "-m", "app.main", "flask", "run"]
