@@ -21,5 +21,3 @@ jobs:
           push: true
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          secrets: |
-            DEEP_TRANSLATE_API_KEY=${{ secrets.DEEP_TRANSLATE_API_KEY }}
