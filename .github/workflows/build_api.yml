@@ -14,25 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build Docker Image
-        run: docker build -t simple_notes/simple_notes:${{ github.sha }} .
-
-      - name: Inject SECRETS
-        shell: bash
-        run: |
-          echo "DEEP_TRANSLATE_API_KEY=${{ secrets.DEEP_TRANSLATE_API_KEY }}" > ${{ github.workspace }}/.env
-
-      - name: Prepare Docker Context
-        run: cp .env .
-
-      - name: Bake Env Vars Into Docker Image
-        run: docker build -f Dockerfile -t simple_notes/simple_notes:${{ github.sha }} .
-
-      - name: Log In To Docker Hub
-        uses: docker/login-action@v2
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
         with:
+          tags: simple_notes/simple_notes:${{ github.sha }}
+          push: true
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Push Docker Image
-        run: docker push simple_notes/simple_notes:${{ github.sha }}
+          secrets: |
+            DEEP_TRANSLATE_API_KEY=${{ secrets.DEEP_TRANSLATE_API_KEY }}
