@@ -16,6 +16,6 @@
     - name: Add dependences
       run: poetry add pytest-cov flake8
     - name: Run pytest with coverage
-      run: poetry run pytest --cov=tests --cov-report=term --cov-fail-under=90
+      run: poetry run pytest --cov=app --cov-report=term --cov-fail-under=90
     - name: Run flake8
       run: poetry run flake8 --max-complexity 8
