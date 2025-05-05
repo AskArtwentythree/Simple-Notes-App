@@ -3,7 +3,8 @@ from app.db import DatabaseManager
 
 def test_create_user(db):
     """Test creating a new user."""
-    (user_id, _) = db.create_user("newuser", "secure_password", "new@example.com")
+    (user_id, _) = db.create_user(
+        "newuser", "secure_password", "new@example.com")
     user = db.get_user_by_id(user_id)
     assert user['username'] == "newuser"
     assert user['email'] == "new@example.com"
@@ -29,11 +30,12 @@ def test_verify_user_user_not_found(db):
 
 def test_create_note(db, test_user_id):
     """Test creating a new note."""
-    note_id = db._create_note(test_user_id, "Test Note", "This is a test note.")
+    note_id = db._create_note(
+        test_user_id, "Test Note", "This is a test note.")
     assert note_id is not None
     note = db._get_note(note_id, test_user_id)
-    assert note['title'] == "Test Note"
-    assert note['content'] == "This is a test note."
+    assert note.title == "Test Note"
+    assert note.content == "This is a test note."
 
 
 def test_get_all_notes(db, test_user_id):
@@ -52,8 +54,8 @@ def test_update_note(db, test_user_id):
     note_id = db._create_note(
         test_user_id, "Original Title", "Original Content")
     updated = db._update_note(note_id, test_user_id,
-                             "Updated Title", "Updated Content")
-    assert updated is True
+                              "Updated Title", "Updated Content")
+    assert updated == 'ok'
     note = db._get_note(note_id, test_user_id)
     assert note.title == "Updated Title"
     assert note.content == "Updated Content"
@@ -62,7 +64,7 @@ def test_update_note(db, test_user_id):
 def test_update_note_not_found(db, test_user_id):
     """Test updating a note that doesn't exist for the user."""
     updated = db._update_note(999, test_user_id, "Updated Title",
-                             "Updated Content")
+                              "Updated Content")
     assert updated == DatabaseManager.NOTE_NOT_FOUND
 
 
@@ -83,7 +85,8 @@ def test_delete_nonexistent_note(db, test_user_id):
 
 def test_get_user_by_id(db):
     """Test getting a user by ID."""
-    (user_id, _) = db.create_user("testuser2", "password123", "test2@example.com")
+    (user_id, _) = db.create_user(
+        "testuser2", "password123", "test2@example.com")
     user = db.get_user_by_id(user_id)
     assert user is not None
     assert user['username'] == "testuser2"
@@ -93,5 +96,6 @@ def test_get_user_by_id(db):
 def test_create_user_duplicate_username(db):
     """Test creating a user with a duplicate username."""
     db.create_user("duplicateuser", "password123", "unique@example.com")
-    user_data = db.create_user("duplicateuser", "anotherpassword", "another@example.com")
+    user_data = db.create_user(
+        "duplicateuser", "anotherpassword", "another@example.com")
     assert user_data is DatabaseManager.USER_ALREADY_EXISTS
