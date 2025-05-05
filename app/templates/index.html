@@ -56,10 +56,6 @@
       cursor: pointer;
     }
 
-    .done-notes {
-      opacity: 0.5;
-    }
-
     .add-button {
       position: fixed;
       right: 20px;
@@ -98,7 +94,6 @@
     }
 
     .btn-open { background: blue; color: white; }
-    .btn-done { background: green; color: white; }
     .btn-delete { background: red; color: white; }
 
     .note-content {
@@ -107,15 +102,11 @@
     }
   </style>
   <script>
-    function handleNoteClick(index, isDone) {
-      const cbId = isDone ? 'cbdone-' + index : 'cb-' + index;
-      const controlsId = isDone ? 'controls-done-' + index : 'controls-' + index;
-
-      const checkbox = document.getElementById(cbId);
-      const controls = document.getElementById(controlsId);
-
-      checkbox.checked = !checkbox.checked;
-      controls.style.display = checkbox.checked ? 'flex' : 'none';
+    function handleNoteClick(index) {
+      const cb = document.getElementById('cb-' + index);
+      const controls = document.getElementById('controls-' + index);
+      cb.checked = !cb.checked;
+      controls.style.display = cb.checked ? 'flex' : 'none';
     }
 
     function stopClickPropagation(event) {
@@ -133,31 +124,13 @@
     <input type="text" placeholder="Search...">
   </div>
 
-  {% for note in notes if not note.done %}
-    <div class="note" onclick="handleNoteClick('{{ loop.index0 }}', false)">
+  {% for note in notes %}
+    <div class="note" onclick="handleNoteClick('{{ loop.index0 }}')">
       <div class="note-content">
         <input type="checkbox" id="cb-{{ loop.index0 }}" onclick="stopClickPropagation(event)">
         <strong>{{ note.title }}</strong>
       </div>
       <div class="note-controls" id="controls-{{ loop.index0 }}">
-        <button class="btn-open" onclick="stopClickPropagation(event); alert('Open clicked')">Open</button>
-        <form action="{{ url_for('mark_done', index=loop.index0) }}" method="post" style="display:inline;" onclick="stopClickPropagation(event)">
-          <button type="submit" class="btn-done">Done</button>
-        </form>
-        <button class="btn-delete" onclick="stopClickPropagation(event); alert('Delete clicked')">Delete</button>
-      </div>
-    </div>
-  {% endfor %}
-
-  <div style="margin-top: 1em; color: gray;">&#9650; Completed {{ notes | selectattr('done') | list | length }}</div>
-
-  {% for note in notes if note.done %}
-    <div class="note done-notes" onclick="handleNoteClick('{{ loop.index0 }}', true)">
-      <div class="note-content">
-        <input type="checkbox" id="cbdone-{{ loop.index0 }}" onclick="stopClickPropagation(event)">
-        <strong>{{ note.title }}</strong>
-      </div>
-      <div class="note-controls" id="controls-done-{{ loop.index0 }}">
         <button class="btn-open" onclick="stopClickPropagation(event); alert('Open clicked')">Open</button>
         <button class="btn-delete" onclick="stopClickPropagation(event); alert('Delete clicked')">Delete</button>
       </div>

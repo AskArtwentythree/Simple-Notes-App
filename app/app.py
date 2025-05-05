@@ -1,24 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template
 
 app = Flask(__name__)
-notes = [
-    {"title": "Task 3", "done": False},
-    {"title": "Task 2", "done": False},
-    {"title": "Task 1", "done": True}
-]
 
+# Mock data
+notes = [
+    {"title": "Task 3"},
+    {"title": "Task 2"},
+    {"title": "Task 1"}
+]
 
 @app.route('/')
 def index():
     return render_template('index.html', notes=notes)
-
-
-@app.route('/done/<int:index>', methods=['POST'])
-def mark_done(index):
-    if 0 <= index < len(notes):
-        notes[index]['done'] = True
-    return redirect(url_for('index'))
-
 
 if __name__ == '__main__':
     app.run(debug=True)
