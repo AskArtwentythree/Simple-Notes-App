@@ -1,22 +1,21 @@
-name: tests
-
-on: push
-
-jobs:
+ name: Python Test and Coverage Check
+ on: [push, pull_request]
+ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-      - name: Run image
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: '1.7.1'
-      - name: Install dependencies
-        run: poetry install; poetry add flake8 pytest
-      - name: Run flake8
-        run: poetry run flake8 --max-complexity 10
-      - name: Run pytest
-        run: poetry run pytest --cov=app --cov-report=term --cov-fail-under=90
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+    - name: Install Poetry
+      run: pip install poetry
+    - name: Install dependencies
+      run: poetry install
+    - name: Add dependences
+      run: poetry add pytest-cov flake8
+    - name: Run pytest with coverage
+      run: poetry run pytest --cov=tests --cov-report=term --cov-fail-under=90
+    - name: Run flake8
+      run: poetry run flake8 --max-complexity 8
