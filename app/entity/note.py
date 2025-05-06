@@ -30,11 +30,11 @@ class Note:
         )
 
     def to_dict(self):
-        return {
-            'note_id': self.note_id,
-            'user_id': self.user_id,
-            'title': self.title,
-            'content': self.content,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at
-        }
+					return {
+							'id': self.note_id,  
+							'user_id': self.user_id,
+							'title': self.title,
+							'content': self.content,
+							'created_at': self.created_at,
+							'updated_at': self.updated_at
+					}
