@@ -2,7 +2,7 @@ import sqlite3
 import bcrypt
 import os
 import uuid
-from app.datetime import current_timestamp_millis, next_day_timestamp_millis
+from app.date_utils import current_timestamp_millis, next_day_timestamp_millis
 from app.entity.note import Note
 
 
