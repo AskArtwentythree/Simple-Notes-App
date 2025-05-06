@@ -43,7 +43,8 @@ class DatabaseManager:
     def connect(self):
         """Connect to the database."""
         try:
-            self.conn = sqlite3.connect(self.db_file_path, check_same_thread=False)
+            self.conn = sqlite3.connect(
+                self.db_file_path, check_same_thread=False)
             self.conn.row_factory = sqlite3.Row
             self.cursor = self.conn.cursor()
 
@@ -167,6 +168,8 @@ class DatabaseManager:
             int: The user_id if the credentials are valid, otherwise None.
         """
         try:
+            self.cursor.execute("BEGIN TRANSACTION")
+
             self.cursor.execute(
                 """SELECT user_id, password_hash
                 FROM Users WHERE username = ?""", (username,))
@@ -183,18 +186,22 @@ class DatabaseManager:
                     user_id = user['user_id']
 
                     self.cursor.execute(
-                        """INSERT OR REPLACE INTO Tokens (user_id, value, expiration)
+                        """INSERT OR REPLACE INTO
+                        Tokens (user_id, value, expiration)
                         VALUES (?, ?, ?)""",
                         (user_id, token_value, expiration)
                     )
-
+                    self.conn.commit()
                     return (user_id, token_value)
                 else:
+                    self.conn.rollback()
                     return DatabaseManager.INVALID_PASSWORD
             else:
+                self.conn.rollback()
                 return DatabaseManager.USER_NOT_FOUND
         except sqlite3.Error as e:
             print(f"Error verifying user: {e}")
+            self.conn.rollback()
             return DatabaseManager.UNKNOWN_ERROR
 
     def get_user_by_id(self, user_id):
@@ -218,15 +225,18 @@ class DatabaseManager:
             return DatabaseManager.USER_NOT_FOUND
 
     def get_user_id_from_token(self, user_token):
-        """Retrieve the user ID from the user token and check if it's expired."""
+        """
+        Retrieves the user ID from the user token.
+        Checks if it's expired.
+        """
         self.cursor.execute("""
             SELECT Users.user_id, Tokens.expiration
             FROM Users
             JOIN Tokens ON Users.user_id = Tokens.user_id
             WHERE Tokens.value = ?""",
-            (user_token,))
+                            (user_token,))
         result = self.cursor.fetchone()
-    
+
         if result:
             user_id, expiration = result
 
@@ -278,11 +288,13 @@ class DatabaseManager:
         try:
             user_id = self.get_user_id_from_token(user_token)
 
-            if user_id == DatabaseManager.TOKEN_EXPIRED or user_id == DatabaseManager.INVALID_TOKEN:
+            if user_id == DatabaseManager.TOKEN_EXPIRED or \
+               user_id == DatabaseManager.INVALID_TOKEN:
                 return user_id
 
-            return self._create_note(user_id=user_id, title=title, content=content)
-        except sqlite3.Error as e:
+            return self._create_note(
+                user_id=user_id, title=title, content=content)
+        except sqlite3.Error:
             return DatabaseManager.UNKNOWN_ERROR
 
     def _get_note(self, note_id, user_id):
@@ -326,7 +338,9 @@ class DatabaseManager:
         try:
             user_id = self.get_user_id_from_token(user_token)
 
-            if user_id == DatabaseManager.TOKEN_EXPIRED or user_id == DatabaseManager.INVALID_TOKEN or user_id == DatabaseManager.NOTE_NOT_FOUND:
+            if user_id == DatabaseManager.TOKEN_EXPIRED or \
+               user_id == DatabaseManager.INVALID_TOKEN or \
+               user_id == DatabaseManager.NOTE_NOT_FOUND:
                 return user_id
 
             return self._get_note(note_id=note_id, user_id=user_id)
@@ -336,11 +350,12 @@ class DatabaseManager:
     def _get_all_notes(self, user_id, search_query=''):
         """
         Retrieves all notes for a specific user.
-        If search_query is provided and not empty/blank, filters notes by title.
+        If search_query is provided and not empty/blank,
+        filters notes by title.
 
         Args:
             user_id (int): The ID of the user.
-            search_query (str): Optional search string to filter notes by title.
+            search_query (str):Optional search string to filter notes by title.
 
         Returns:
             list: A list of objects representing the user's notes.
@@ -353,13 +368,13 @@ class DatabaseManager:
                     SELECT * FROM Notes
                     WHERE user_id = ? AND title LIKE ?
                     ORDER BY updated_at DESC""",
-                    (user_id, f'%{query}%'))
+                                    (user_id, f'%{query}%'))
             else:
                 self.cursor.execute("""
                     SELECT * FROM Notes
                     WHERE user_id = ?
                     ORDER BY updated_at DESC""",
-                    (user_id,))
+                                    (user_id,))
 
             notes = self.cursor.fetchall()
             return list(map(Note.from_row, notes))
@@ -380,10 +395,12 @@ class DatabaseManager:
         try:
             user_id = self.get_user_id_from_token(user_token,)
 
-            if user_id == DatabaseManager.TOKEN_EXPIRED or user_id == DatabaseManager.INVALID_TOKEN:
+            if user_id == DatabaseManager.TOKEN_EXPIRED or \
+               user_id == DatabaseManager.INVALID_TOKEN:
                 return user_id
 
-            return self._get_all_notes(user_id=user_id, search_query=search_query)
+            return self._get_all_notes(
+                user_id=user_id, search_query=search_query)
         except sqlite3.Error:
             return []
 
@@ -432,10 +449,12 @@ class DatabaseManager:
         try:
             user_id = self.get_user_id_from_token(user_token)
 
-            if user_id == DatabaseManager.TOKEN_EXPIRED or user_id == DatabaseManager.INVALID_TOKEN:
+            if user_id == DatabaseManager.TOKEN_EXPIRED or \
+               user_id == DatabaseManager.INVALID_TOKEN:
                 return user_id
 
-            return self._update_note(note_id=note_id, user_id=user_id, title=title, content=content)
+            return self._update_note(
+                note_id=note_id, user_id=user_id, title=title, content=content)
         except sqlite3.Error:
             return DatabaseManager.UNKNOWN_ERROR
 
@@ -470,7 +489,7 @@ class DatabaseManager:
 
         Args:
             note_id (int): The ID of the note to delete.
-            user_token (str): The ID of the user deleting the note (for security).
+            user_token (str): The ID of the user deleting the note.
 
         Returns:
             bool: True if the deletion was successful, False otherwise.
@@ -478,7 +497,8 @@ class DatabaseManager:
         try:
             user_id = self.get_user_id_from_token(user_token)
 
-            if user_id == DatabaseManager.TOKEN_EXPIRED or user_id == DatabaseManager.INVALID_TOKEN:
+            if user_id == DatabaseManager.TOKEN_EXPIRED or \
+               user_id == DatabaseManager.INVALID_TOKEN:
                 return user_id
 
             return self._delete_note(note_id=note_id, user_id=user_id)
