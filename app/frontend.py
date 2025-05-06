@@ -106,62 +106,77 @@ if st.sidebar.button("Log out", key="logout"):
 params = st.query_params
 note_param = params.get("note", [None])[0]
 
+# … above auth / list code remains unchanged …
+
 if note_param:
     note_id = int(note_param)
     st.title("✏️ Edit Note")
+
+    # 1) fetch the note
     note = api_request(f"/notes/{note_id}", "GET", token=st.session_state.token)
-
-    if note and isinstance(note, dict):
-        key_suffix = note_id
-
-        title_key = f"title_{key_suffix}"
-        if title_key not in st.session_state:
-            st.session_state[title_key] = note.get("title","")
-        header = st.text_input("Title",
-                               value=st.session_state[title_key],
-                               key=title_key)
-
-        content_key = f"content_{key_suffix}"
-        trans_key   = f"translated_{key_suffix}"
-        if trans_key not in st.session_state:
-            st.session_state[trans_key] = note.get("content","")
-
-        body = st.text_area("Content",
-                            value=st.session_state[trans_key],
-                            key=content_key)
-
-        c1, c2, c3, c4 = st.columns(4)
-
-        with c1:
-            if st.button("Save", key=f"save_{key_suffix}"):
-                api_request(f"/notes/{note_id}", "PATCH",
-                            token=st.session_state.token,
-                            data={"title": header, "content": body})
-                st.session_state.just_saved = True
-                st.query_params = {}
-                st.rerun()
-
-        with c2:
-            if st.button("Translate", key=f"trans_{key_suffix}") and body.strip():
-                res = api_request("/translate", "POST",
-                                  token=st.session_state.token,
-                                  data={"query": body})
-                if res and res.get("translation"):
-                    st.session_state[trans_key] = res["translation"]
-                    st.rerun()
-
-        with c3:
-            if st.button("Delete Note", key=f"del_{key_suffix}"):
-                api_request(f"/notes/{note_id}", "DELETE", token=st.session_state.token)
-                st.query_params = {}
-                st.rerun()
-
-        with c4:
-            if st.button("Back to list", key="back"):
-                st.query_params = {}
-                st.rerun()
-    else:
+    if not note:
         st.error("Failed to load note.")
+        st.stop()
+
+    # 2) single session_state key for title
+    title_key = f"title_{note_id}"
+    if title_key not in st.session_state:
+        st.session_state[title_key] = note["title"]
+    header = st.text_input("Title", key=title_key)
+
+    # 3) single session_state key for content
+    content_key = f"content_{note_id}"
+    if content_key not in st.session_state:
+        st.session_state[content_key] = note["content"]
+    body = st.text_area("Content", key=content_key)
+    
+     # -- define translate callback --
+    def do_translate():
+        res = api_request(
+            "/translate", "POST",
+            token=st.session_state.token,
+            data={"query": st.session_state[content_key]}
+        )
+        if res and res.get("translation"):
+            st.session_state[content_key] = res["translation"]
+    # ---------------------------------
+
+    # 4) action buttons
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        if st.button("Save", key=f"save_{note_id}"):
+            # PATCH with exactly what's in session_state
+            api_request(f"/notes/{note_id}", "PATCH",
+                        token=st.session_state.token,
+                        data={
+                          "title": st.session_state[title_key],
+                          "content": st.session_state[content_key]
+                        })
+            # mark and return to list
+            st.session_state.just_saved = True
+            st.query_params = {}
+            st.rerun()
+
+    with c2:
+        st.button(
+            "Translate",
+            key=f"trans_{note_id}",
+            on_click=do_translate,
+            disabled=(not st.session_state[content_key].strip())
+        )
+
+    with c3:
+        if st.button("Delete Note", key=f"del_{note_id}"):
+            api_request(f"/notes/{note_id}", "DELETE", token=st.session_state.token)
+            st.query_params = {}
+            st.rerun()
+
+    with c4:
+        if st.button("Back to list", key="back"):
+            st.query_params = {}
+            st.rerun()
+
 
 else:
     # --- LIST PAGE ---
