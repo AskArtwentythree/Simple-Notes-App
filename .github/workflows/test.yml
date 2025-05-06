@@ -1,0 +1,27 @@
+ name: Python Test and Coverage Check
+ on: [push, pull_request]
+ jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+    - name: Install Poetry
+      run: pip install poetry
+    - name: Install dependencies
+      run: poetry install
+    - name: Add dependences
+      run: poetry add pytest-cov flake8 radon interrogate bandit
+    - name: Run pytest with coverage
+      run: poetry run pytest --cov=app --cov-report=term --cov-fail-under=90
+    - name: Run flake8
+      run: poetry run flake8 --max-complexity 8
+    - name: Run radon
+      run: poetry run radon mi app --min B
+    - name: Run interrogate
+      run: poetry run interrogate -v app
+    - name: Run bandit
+      run: poetry run bandit -r app
