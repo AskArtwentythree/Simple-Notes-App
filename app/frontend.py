@@ -1,26 +1,28 @@
-import streamlit as st
-import requests
-
 """
 Simple Notes frontend.
 
-This module implements the Streamlit UI for
-authentication, note CRUD, and translation features,
-backed by a JSON API.
+This module implements the Streamlit UI for:
+  - user authentication (sign in / sign up)
+  - creating, editing, deleting notes via a JSON API
+  - translating note content from Russian to English
+
+All API communication is handled by a small helper that
+prepends the backend base URL, sends a Bearer token, parses
+JSON, and surfaces any errors via `st.error()`.
 """
+
+import streamlit as st
+import requests
 
 st.set_page_config(page_title="Simple Notes", layout="centered")
 
 
-# ------------------------
-# Configuration
-# ------------------------
 def get_backend_url() -> str:
     """
     Retrieve the base URL for the backend API.
 
-    Reads the `"backend_url"` key from Streamlit secrets, otherwise
-    falls back to `http://127.0.0.1:8080`.
+    Reads the "backend_url" key from Streamlit secrets; if missing,
+    defaults to "http://127.0.0.1:8080".
 
     Returns:
         str: The URL to use for all API requests.
@@ -28,6 +30,7 @@ def get_backend_url() -> str:
     return st.secrets.get("backend_url", "http://127.0.0.1:8080")
 
 
+# Custom CSS to style each note card
 st.markdown(
     """
     <style>
@@ -43,33 +46,31 @@ st.markdown(
 )
 
 
-# ------------------------
-# API helper
-# ------------------------
 def api_request(path, method="GET", token=None, data=None):
     """
     Make a JSON HTTP request to the backend and handle errors.
 
-    Builds the full URL by prepending the backend base URL, attaches
-    a Bearer token, and then parses the response body.
+    Builds the full URL by prepending the backend base URL,
+    attaches a Bearer token (if provided), and attempts to
+    parse the response body as JSON.
 
     Parameters:
     -----------
     path : str
         The API path (e.g. "/notes" or "/notes/1").
     method : str, optional
-        The HTTP method to use, by default "GET".
+        The HTTP method to use (default: "GET").
     token : str or None, optional
-        A Bearer token for Authorization header, by default None.
+        A Bearer token for the Authorization header (default: None).
     data : dict or None, optional
-        A JSON-serializable payload for POST/PATCH requests, by default None.
+        A JSON‐serializable payload for POST/PATCH (default: None).
 
     Returns:
     --------
     dict or list or {}
         The parsed JSON response, or an empty dict if no response body.
     None
-        If an HTTP or network error occurred and an error was displayed.
+        If an HTTP or network error occurred (and was reported via st.error).
 
     Side Effects:
     -------------
@@ -79,16 +80,15 @@ def api_request(path, method="GET", token=None, data=None):
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
+
     try:
         r = requests.request(
           method, url, json=data, headers=headers, timeout=5)
         r.raise_for_status()
 
-        # No content
         if not r.text:
             return {}
 
-        # Try to parse JSON
         try:
             return r.json()
         except ValueError:
@@ -108,20 +108,51 @@ def api_request(path, method="GET", token=None, data=None):
     return None
 
 
-# ------------------------
-# Session init & config
-# ------------------------
+def do_translate_callback(content_key: str):
+    """
+    Callback to translate the current note content from Russian to English.
+
+    Reads the raw content from `st.session_state[content_key]`,
+    calls the `/translate` endpoint, and on success replaces
+    `session_state[content_key]` with the translated text.
+
+    Parameters:
+    -----------
+    content_key : str
+        The session_state key under which the note's content is stored.
+
+    Side Effects:
+    -------------
+    - May call `st.error(...)` if the API call fails.
+    """
+    res = api_request(
+        "/translate",
+        "POST",
+        token=st.session_state.token,
+        data={"query": st.session_state[content_key]},
+    )
+    if res and res.get("translation"):
+        st.session_state[content_key] = res["translation"]
+
+
+# Ensure session_state keys exist
 st.session_state.setdefault("token", None)
 st.session_state.setdefault("just_saved", False)
 
 
-# ------------------------
-# Authentication
-# ------------------------
 if st.session_state.token is None:
+    _ = """
+    Render and process the authentication sidebar.
+
+    If unauthenticated, shows a "Sign In"/"Sign Up" toggle.
+    On Sign Up: validates email/username/password, then POSTs to /sign_up.
+    On Sign In: validates username/password, then POSTs to /sign_in.
+    On success: sets `session_state.token`, shows a success message,
+    and calls `st.rerun()`.
+    """
     st.sidebar.title("🔒 Authentication")
-    choice = st.sidebar.radio(
-      "Navigate", ["Sign In", "Sign Up"], key="auth_page")
+    choice = st.sidebar.radio("Navigate",
+                              ["Sign In", "Sign Up"], key="auth_page")
 
     if choice == "Sign Up":
         st.title("Create New Account")
@@ -168,9 +199,7 @@ if st.session_state.token is None:
     st.stop()
 
 
-# ------------------------
-# Main app (authenticated)
-# ------------------------
+# Main app once authenticated
 st.sidebar.success("Logged in 🎉")
 if st.sidebar.button("Log out", key="logout"):
     st.session_state.token = None
@@ -180,6 +209,14 @@ params = st.query_params
 note_param = params.get("note", [None])[0]
 
 if note_param:
+    _ = """
+    Edit Note view:
+
+    - Loads note via GET /notes/{id}
+    - Provides Title +
+    Content inputs bound to session_state
+    - Buttons: Save (PATCH), Translate, Delete, Back
+    """
     note_id = int(note_param)
     st.title("✏️ Edit Note")
 
@@ -189,40 +226,19 @@ if note_param:
         st.error("Failed to load note.")
         st.stop()
 
-    # 2) single session_state key for title
+    # title field
     title_key = f"title_{note_id}"
     if title_key not in st.session_state:
         st.session_state[title_key] = note["title"]
-    header = st.text_input("Title", key=title_key)
+    st.text_input("Title", key=title_key)
 
-    # 3) single session_state key for content
+    # content field
     content_key = f"content_{note_id}"
     if content_key not in st.session_state:
         st.session_state[content_key] = note["content"]
-    body = st.text_area("Content", key=content_key)
+    st.text_area("Content", key=content_key)
 
-    # -- define translate callback --
-    def do_translate():
-        """
-        Callback to translate
-        the current note content.
-
-        Sends the content in session_state[content_key] to the
-        /translate endpoint
-        and updates the session_state on success from Russian to English.
-        """
-        res = api_request(
-            "/translate",
-            "POST",
-            token=st.session_state.token,
-            data={"query": st.session_state[content_key]},
-        )
-        if res and res.get("translation"):
-            st.session_state[content_key] = res["translation"]
-
-    # 4) action buttons
     c1, c2, c3, c4 = st.columns(4)
-
     with c1:
         if st.button("Save", key=f"save_{note_id}"):
             api_request(
@@ -242,16 +258,17 @@ if note_param:
         st.button(
             "Translate",
             key=f"trans_{note_id}",
-            on_click=do_translate,
-            disabled=(
-              not st.session_state[content_key].strip()),
+            on_click=lambda ck=content_key: do_translate_callback(ck),
+            disabled=(not st.session_state[content_key].strip()),
         )
 
     with c3:
         if st.button(
           "Delete Note", key=f"del_{note_id}"):
             api_request(
-              f"/notes/{note_id}", "DELETE", token=st.session_state.token)
+              f"/notes/{note_id}",
+              "DELETE",
+              token=st.session_state.token)
             st.query_params = {}
             st.rerun()
 
@@ -260,16 +277,19 @@ if note_param:
             st.query_params = {}
             st.rerun()
 
-
 else:
-    # --- LIST PAGE ---
-    st.title("🗒️ Simple Notes")
+    _ = """
+    Notes List view:
 
+    - Shows "Saved." toast if `just_saved` was set.
+    - Search box + "Add new note" POST /notes
+    - Renders each note with Open & Delete buttons.
+    """
+    st.title("🗒️ Simple Notes")
     if st.session_state.just_saved:
         st.success("Saved.")
         st.session_state.just_saved = False
 
-    # Search & Add
     search = st.text_input("Search notes…", key="search")
     if st.button("➕ Add new note", key="add"):
         new = api_request(
@@ -284,7 +304,9 @@ else:
 
     notes = (
         api_request(
-          f"/notes?query={search}", "GET", token=st.session_state.token) or []
+          f"/notes?query={search}",
+          "GET",
+          token=st.session_state.token) or []
     )
     for n in notes:
         nid = n.get("id")
@@ -292,7 +314,9 @@ else:
         with st.container(border=True):
             col_title, col_buttons = st.columns([4, 1])
             with col_title:
-                st.markdown(f"**{title}**")
+                st.markdown(
+                  f"<strong>{title.strip()}</strong>",
+                  unsafe_allow_html=True)
             with col_buttons:
                 if st.button("Open", key=f"open_{nid}"):
                     st.query_params = {"note": [str(nid)]}

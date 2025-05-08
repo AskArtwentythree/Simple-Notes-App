@@ -43,12 +43,15 @@ def auth_token(test_user):
     requests.post(f"{BACKEND_URL}/sign_up", json=test_user)
     resp = requests.post(
         f"{BACKEND_URL}/sign_in",
-        json={"username": test_user["username"], 
+        json={"username": test_user["username"],
               "password": test_user["password"]},
     )
     resp.raise_for_status()
     data = resp.json()
-    token = data.get("access_token") or data.get("token") or data.get("auth_token")
+    token = data.get(
+      "access_token") or data.get(
+        "token") or data.get(
+          "auth_token")
     return token
 
 
@@ -109,11 +112,13 @@ def test_signin_form_validation_and_success(test_user):
     at.text_input[1].set_value("WrongPassword").run()
     at.button[0].click().run()
     assert (
-        len(at.error) >= 1 or len(at.warning) >= 1
+        len(
+          at.error) >= 1 or len(at.warning) >= 1
     ), "Expected error on wrong password"
     at.text_input[1].set_value(test_user["password"]).run()
     at.button[0].click().run()
-    titles_headers = [el.value for el in at.title] + [el.value for el in at.header]
+    titles_headers = [
+      el.value for el in at.title] + [el.value for el in at.header]
     assert any(
         "simple notes" in t.lower() for t in titles_headers
     ), "Expected to see Simple Notes title after login"
@@ -188,25 +193,31 @@ def test_note_translation(auth_token, test_user):
     4) Verifies the resulting content includes English words.
 
     Args:
-        auth_token (str): The bearer token for authentication.
-        test_user (dict): The user credentials dict from the test_user fixture.
+        auth_token (str):
+        The bearer token for authentication.
+        test_user (dict):
+        The user credentials dict from the test_user fixture.
     """
     at = AppTest.from_file(FRONTEND_FILE)
     at.session_state["token"] = auth_token
     at.session_state["username"] = test_user["username"]
     at = at.run()
-    add_buttons = [btn for btn in at.button if "add new note" in btn.label.lower()]
+    add_buttons = [
+      btn for btn in at.button if "add new note" in btn.label.lower()]
     assert add_buttons, "Add new note button should be present"
     add_buttons[0].click().run()
-    at.text_input[0].set_value("Russian Note").run()
-    at.text_area[0].set_value("Привет мир").run()
+    at.text_input[0].set_value(
+      "Russian Note").run()
+    at.text_area[0].set_value(
+      "Привет мир").run()
     save_buttons = [btn for btn in at.button if btn.label.lower() == "save"]
     assert save_buttons, "Save button should be present"
     save_buttons[0].click().run()
     open_buttons = [btn for btn in at.button if btn.label.lower() == "open"]
     assert open_buttons, "Open button for the note should exist"
     open_buttons[0].click().run()
-    translate_buttons = [btn for btn in at.button if "translate" in btn.label.lower()]
+    translate_buttons = [
+      btn for btn in at.button if "translate" in btn.label.lower()]
     assert translate_buttons, "Translate button should be present"
     translate_buttons[0].click().run()
     translated_text = at.text_area[0].value
