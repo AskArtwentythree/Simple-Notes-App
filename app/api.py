@@ -60,10 +60,14 @@ def sign_up():
 @api.route("/notes", methods=["GET"])
 def get_notes():
     try:
-        token = request.headers.get("Authorization").replace("Bearer", "").strip()
+        token = request.headers.get("Authorization")
+        token = token.replace("Bearer", "").strip()
         search_query = request.args.get("query", "")
 
-        result = db_manager.get_all_notes(user_token=token, search_query=search_query)
+        result = db_manager.get_all_notes(
+            user_token=token,
+            search_query=search_query,
+        )
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
             return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
@@ -82,7 +86,8 @@ def get_notes():
 @api.route("/notes/<int:id>", methods=["GET"])
 def get_note_by_id(id):
     try:
-        token = request.headers.get("Authorization").replace("Bearer", "").strip()
+        token = request.headers.get("Authorization")
+        token = token.replace("Bearer", "").strip()
 
         result = db_manager.get_note(note_id=id, user_token=token)
 
@@ -106,13 +111,18 @@ def get_note_by_id(id):
 @api.route("/notes", methods=["POST"])
 def create_note():
     try:
-        token = request.headers.get("Authorization").replace("Bearer", "").strip()
+        token = request.headers.get("Authorization")
+        token = token.replace("Bearer", "").strip()
 
         data = request.json
         title = data.get("title")
         content = data.get("content")
 
-        result = db_manager.create_note(user_token=token, title=title, content=content)
+        result = db_manager.create_note(
+            user_token=token,
+            title=title,
+            content=content,
+        )
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
             return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
@@ -131,7 +141,8 @@ def create_note():
 @api.route("/notes/<int:id>", methods=["PATCH"])
 def update_note(id):
     try:
-        token = request.headers.get("Authorization").replace("Bearer", "").strip()
+        token = request.headers.get("Authorization")
+        token = token.replace("Bearer", "").strip()
 
         data = request.json
         title = data.get("title")
@@ -161,7 +172,8 @@ def update_note(id):
 @api.route("/notes/<int:id>", methods=["DELETE"])
 def delete_note(id):
     try:
-        token = request.headers.get("Authorization").replace("Bearer", "").strip()
+        token = request.headers.get("Authorization")
+        token = token.replace("Bearer", "").strip()
 
         result = db_manager.delete_note(note_id=id, user_token=token)
 
@@ -235,7 +247,9 @@ def translate():
             return jsonify({"error": error_message}), 500
 
         translated_data = response.json()
-        translated_text = translated_data["data"]["translations"]["translatedText"][0]
+        translated_text = translated_data["data"]
+        translated_text = translated_text["translations"]
+        translated_text = translated_text["translatedText"][0]
 
         return jsonify({"translation": translated_text}), 200
 
