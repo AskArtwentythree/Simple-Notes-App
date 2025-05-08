@@ -11,6 +11,13 @@ db_manager = DatabaseManager()
 
 @api.route("/sign_in", methods=["POST"])
 def sign_in():
+    """
+    Authenticates an existing user.
+    Receives user credentials (username and password)
+    from the request body and attempts
+    to verify them against the database.
+    """
+
     try:
         data = request.json
         username = data.get("username")
@@ -35,6 +42,13 @@ def sign_in():
 
 @api.route("/sign_up", methods=["POST"])
 def sign_up():
+    """
+    Registers a new user.
+    Receives user details (email, username, password)
+    from the request body and attempts
+    to create a new user in the database.
+    """
+
     try:
         data = request.json
         email = data.get("email")
@@ -59,6 +73,12 @@ def sign_up():
 
 @api.route("/notes", methods=["GET"])
 def get_notes():
+    """
+    Retrieves all notes associated with
+    the authenticated user,
+    with optional search functionality.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -85,6 +105,13 @@ def get_notes():
 
 @api.route("/notes/<int:id>", methods=["GET"])
 def get_note_by_id(id):
+    """
+    Retrieves a specific note based on its ID.
+
+    Args:
+        id (int): The unique identifier of the note to retrieve.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -110,6 +137,14 @@ def get_note_by_id(id):
 
 @api.route("/notes", methods=["POST"])
 def create_note():
+    """
+    Handles the POST request to create a new note.
+    The user must be authenticated via
+    a Bearer token in the Authorization header.
+    The request body must contain the
+    'title' and 'content' for the new note.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -140,6 +175,15 @@ def create_note():
 
 @api.route("/notes/<int:id>", methods=["PATCH"])
 def update_note(id):
+    """
+    Handles the PATCH request to
+    update an existing note identified by its ID.
+    Allows partial updates to the
+    note's title and/or content.
+    The user must provide a valid
+    Bearer token for authorization.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -171,6 +215,21 @@ def update_note(id):
 
 @api.route("/notes/<int:id>", methods=["DELETE"])
 def delete_note(id):
+    """
+    Deletes a specific note identified by its ID.
+
+    The user must be authenticated
+    via a Bearer token in the Authorization header.
+
+    Path Parameters:
+        id (int): The unique identifier
+        of the note to be deleted.
+
+    Request Headers:
+        Authorization (str): Bearer token for authentication.
+        Example: "Bearer <your_jwt_token>"
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -197,7 +256,8 @@ def delete_note(id):
 @api.route("/translate", methods=["POST"])
 def translate():
     """
-    Translates given text from English to Russian using Deep Translate API.
+    Translates given text from
+    English to Russian using Deep Translate API.
 
     Request Body:
     {
@@ -244,6 +304,7 @@ def translate():
             "https://deep-translate1.p.rapidapi.com/language/translate/v2",
             headers=headers,
             json=payload,
+            timeout=10
         )
 
         if response.status_code != 200:

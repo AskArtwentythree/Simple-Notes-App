@@ -40,7 +40,7 @@ def test_verify_user(db, test_user_id):
 def test_verify_user_invalid_credentials(db):
     """Test verifying a user with invalid credentials."""
     user_data = db.verify_user("testuser", "wrong_password")
-    assert user_data is DatabaseManager.INVALID_PASSWORD
+    assert user_data is DatabaseManager.STATUS_INVALID_PASSWORD
 
 
 def test_verify_user_user_not_found(db):
