@@ -43,7 +43,8 @@ def auth_token(test_user):
     requests.post(f"{BACKEND_URL}/sign_up", json=test_user)
     resp = requests.post(
         f"{BACKEND_URL}/sign_in",
-        json={"username": test_user["username"], "password": test_user["password"]},
+        json={"username": test_user["username"], 
+              "password": test_user["password"]},
     )
     resp.raise_for_status()
     data = resp.json()
@@ -57,8 +58,10 @@ def test_signup_form_validation_and_success(test_user):
 
     1) Loads the Streamlit app and switches to "Sign Up".
     2) Submits incomplete data to trigger validation errors.
-    3) Submits mismatched passwords to trigger another validation.
-    4) Submits correct data, expects a success message and token in session_state.
+    3) Submits mismatched passwords
+    to trigger another validation.
+    4) Submits correct data,
+    expects a success message and token in session_state.
 
     Args:
         test_user (dict): The user credentials dict from the test_user fixture.
@@ -93,7 +96,8 @@ def test_signin_form_validation_and_success(test_user):
     1) Registers the test user via the backend.
     2) Loads the Streamlit app and switches to "Sign In".
     3) Submits wrong password to trigger validation.
-    4) Submits correct credentials, expects the main app to appear and token stored.
+    4) Submits correct credentials,
+    expects the main app to appear and token stored.
 
     Args:
         test_user (dict): The user credentials dict from the test_user fixture.

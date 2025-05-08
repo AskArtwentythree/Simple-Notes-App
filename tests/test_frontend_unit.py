@@ -1,7 +1,6 @@
 import pytest
 import streamlit as st
 import requests
-import requests_mock
 
 import app.frontend as F
 
