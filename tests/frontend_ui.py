@@ -207,5 +207,5 @@ def test_note_translation(auth_token, test_user):
     translate_buttons[0].click().run()
     translated_text = at.text_area[0].value
     assert (
-        "Привет" in translated_text
+        "Hello" in translated_text
     ), f"Expected English translation, got: {translated_text}"
