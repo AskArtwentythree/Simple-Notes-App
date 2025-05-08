@@ -4,6 +4,8 @@ entity/note.py
 Defines the Note “entity” model, which represents a single
 note record stored in the database
 """
+
+
 class Note:
     def __init__(
         self,
