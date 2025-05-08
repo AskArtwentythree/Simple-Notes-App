@@ -14,7 +14,7 @@ class DatabaseManager:
 
     USER_NOT_FOUND = 'user_not_found'
     USER_ALREADY_EXISTS = 'user_alredy_exists'
-    INVALID_PASSWORD = 'invalid_password'
+    STATUS_INVALID_PASSWORD = 'invalid_password'
     TOKEN_EXPIRED = 'token_expired'
     INVALID_TOKEN = 'invalid_token'
     NOTE_NOT_FOUND = 'note_not_found'
@@ -195,7 +195,7 @@ class DatabaseManager:
                     return (user_id, token_value)
                 else:
                     self.conn.rollback()
-                    return DatabaseManager.INVALID_PASSWORD
+                    return DatabaseManager.STATUS_INVALID_PASSWORD
             else:
                 self.conn.rollback()
                 return DatabaseManager.USER_NOT_FOUND

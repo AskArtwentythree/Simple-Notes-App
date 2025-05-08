@@ -304,6 +304,7 @@ def translate():
             "https://deep-translate1.p.rapidapi.com/language/translate/v2",
             headers=headers,
             json=payload,
+            timeout=10
         )
 
         if response.status_code != 200:

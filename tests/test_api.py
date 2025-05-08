@@ -46,7 +46,7 @@ def test_sign_in_success(client, mock_db):
 
 
 def test_sign_in_invalid_credentials(client, mock_db):
-    mock_db.verify_user.return_value = DatabaseManager.INVALID_PASSWORD
+    mock_db.verify_user.return_value = DatabaseManager.STATUS_INVALID_PASSWORD
 
     response = client.post('/sign_in', json={
         'username': 'username',
