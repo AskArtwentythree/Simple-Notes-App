@@ -15,6 +15,8 @@
       run: poetry install
     - name: Add dependences
       run: poetry add pytest
+    - name: Set the DEEP_TRANSLATE_API_KEY environment variable
+      run: echo "DEEP_TRANSLATE_API_KEY=8df4f28b1cmsh9ba888ac2d6ed96p1a9443jsn3639cf1a5995" >> $GITHUB_ENV
     - name: Run Servers in Background
       run: |
         poetry run python -m app.main flask run --host=0.0.0.0 --port=8080 &
