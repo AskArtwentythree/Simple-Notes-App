@@ -1,10 +1,19 @@
 import pytest
 import os
+import streamlit as st
+
 
 from app.db import DatabaseManager
 
 TEST_DB_NAME = "test_notes.db"
 TEST_DB_PATH = "tests"
+
+
+@pytest.fixture(autouse=True)
+def isolate_streamlit(monkeypatch):
+    monkeypatch.setattr(st, "secrets", {}, raising=False)
+    st.session_state.clear()
+    yield
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -39,4 +48,4 @@ def test_user_id(db):
     """Fixture to get the ID of the test user."""
     db.cursor.execute("SELECT user_id FROM Users WHERE username = 'testuser'")
     user = db.cursor.fetchone()
-    return user['user_id']
+    return user["user_id"]

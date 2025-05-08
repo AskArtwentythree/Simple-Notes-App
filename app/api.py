@@ -234,7 +234,11 @@ def translate():
             "X-RapidAPI-Key": os.getenv("DEEP_TRANSLATE_API_KEY"),
         }
 
-        payload = {"q": query, "source": "en", "target": "ru"}
+        payload = {
+            "q": query,
+            "source": "ru",
+            "target": "en"
+        }
 
         response = requests.post(
             "https://deep-translate1.p.rapidapi.com/language/translate/v2",
