@@ -198,8 +198,8 @@ def translate():
 
         payload = {
             "q": query,
-            "source": "en",
-            "target": "ru"
+            "source": "ru",
+            "target": "en"
         }
 
         response = requests.post(
