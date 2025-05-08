@@ -1,4 +1,4 @@
- name: Python Test and Coverage Check
+ name: Integration Test
  on: [push, pull_request]
  jobs:
   test:
