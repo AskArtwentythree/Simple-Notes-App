@@ -11,6 +11,18 @@ db_manager = DatabaseManager()
 
 @api.route("/sign_in", methods=["POST"])
 def sign_in():
+    """
+    Authenticates an existing user.
+
+    Receives user credentials (username and password) from the request body and attempts to verify them against the database.
+
+    Returns:
+        tuple: A JSON response containing either a JWT token upon successful authentication or an error message with an HTTP status code.
+               - 200 (OK): If the credentials are valid, returns a JSON object with the generated token.
+               - 404 (Not Found): If the provided username is not found or the password is incorrect.
+               - 500 (Internal Server Error): If a database error or other unexpected error occurs.
+    """
+
     try:
         data = request.json
         username = data.get("username")
@@ -35,6 +47,18 @@ def sign_in():
 
 @api.route("/sign_up", methods=["POST"])
 def sign_up():
+    """
+    Registers a new user.
+
+    Receives user details (email, username, password) from the request body and attempts to create a new user in the database.
+
+    Returns:
+        tuple: A JSON response containing either a JWT token upon successful registration or an error message with an HTTP status code.
+               - 200 (OK): If the user is successfully created, returns a JSON object with the generated token.
+               - 400 (Bad Request): If the provided username already exists.
+               - 500 (Internal Server Error): If a database error or other unexpected error occurs.
+    """
+
     try:
         data = request.json
         email = data.get("email")
@@ -59,6 +83,16 @@ def sign_up():
 
 @api.route("/notes", methods=["GET"])
 def get_notes():
+    """
+    Retrieves all notes associated with the authenticated user, with optional search functionality.
+
+    Returns:
+        tuple: A JSON response containing a list of note data and an HTTP status code.
+               - 200 (OK): If the notes are successfully retrieved.
+               - 401 (Unauthorized): If the provided token is invalid or expired.
+               - 500 (Internal Server Error): If a database error or other unexpected error occurs.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -85,6 +119,20 @@ def get_notes():
 
 @api.route("/notes/<int:id>", methods=["GET"])
 def get_note_by_id(id):
+    """
+    Retrieves a specific note based on its ID.
+
+    Args:
+        id (int): The unique identifier of the note to retrieve.
+
+    Returns:
+        tuple: A JSON response containing the note data and an HTTP status code.
+               - 200 (OK): If the note is successfully retrieved.
+               - 401 (Unauthorized): If the provided token is invalid or expired.
+               - 404 (Not Found): If a note with the given ID does not exist.
+               - 500 (Internal Server Error): If a database error or other unexpected error occurs.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -110,6 +158,12 @@ def get_note_by_id(id):
 
 @api.route("/notes", methods=["POST"])
 def create_note():
+    """
+    Handles the POST request to create a new note.
+    The user must be authenticated via a Bearer token in the Authorization header.
+    The request body must contain the 'title' and 'content' for the new note.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -140,6 +194,12 @@ def create_note():
 
 @api.route("/notes/<int:id>", methods=["PATCH"])
 def update_note(id):
+    """
+    Handles the PATCH request to update an existing note identified by its ID.
+    Allows partial updates to the note's title and/or content.
+    The user must provide a valid Bearer token for authorization.
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
@@ -171,6 +231,19 @@ def update_note(id):
 
 @api.route("/notes/<int:id>", methods=["DELETE"])
 def delete_note(id):
+    """
+    Deletes a specific note identified by its ID.
+
+    The user must be authenticated via a Bearer token in the Authorization header.
+
+    Path Parameters:
+        id (int): The unique identifier of the note to be deleted.
+
+    Request Headers:
+        Authorization (str): Bearer token for authentication.
+        Example: "Bearer <your_jwt_token>"
+    """
+
     try:
         token = request.headers.get("Authorization")
         token = token.replace("Bearer", "").strip()
