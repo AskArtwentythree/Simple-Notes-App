@@ -9,157 +9,180 @@ api = Flask(__name__)
 db_manager = DatabaseManager()
 
 
-@api.route('/sign_in', methods=['POST'])
+@api.route("/sign_in", methods=["POST"])
 def sign_in():
     try:
         data = request.json
-        username = data.get('username')
-        password = data.get('password')
+        username = data.get("username")
+        password = data.get("password")
 
         result = db_manager.verify_user(username=username, password=password)
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
-        if result == DatabaseManager.INVALID_PASSWORD or result == DatabaseManager.USER_NOT_FOUND:
-            return jsonify({'error': result}), 404
+        if (
+            result == DatabaseManager.INVALID_PASSWORD
+            or result == DatabaseManager.USER_NOT_FOUND
+        ):
+            return jsonify({"error": result}), 404
 
         (_, token) = result
-        return jsonify({'token': token}), 200
+        return jsonify({"token": token}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@api.route('/sign_up', methods=['POST'])
+@api.route("/sign_up", methods=["POST"])
 def sign_up():
     try:
         data = request.json
-        email = data.get('email')
-        username = data.get('username')
-        password = data.get('password')
+        email = data.get("email")
+        username = data.get("username")
+        password = data.get("password")
 
-        result = db_manager.create_user(username=username, password=password, email=email)
+        result = db_manager.create_user(
+            username=username, password=password, email=email
+        )
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
         if result == DatabaseManager.USER_ALREADY_EXISTS:
-            return jsonify({'error': result}), 400
+            return jsonify({"error": result}), 400
 
         (_, token) = result
-        return jsonify({'token': token}), 200
+        return jsonify({"token": token}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@api.route('/notes', methods=['GET'])
+@api.route("/notes", methods=["GET"])
 def get_notes():
     try:
-        token = request.headers.get('Authorization').replace('Bearer', '').strip()
-        search_query = request.args.get('query', '')
+        token = request.headers.get("Authorization").replace("Bearer", "").strip()
+        search_query = request.args.get("query", "")
 
         result = db_manager.get_all_notes(user_token=token, search_query=search_query)
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
-        if result == DatabaseManager.TOKEN_EXPIRED or result == DatabaseManager.INVALID_TOKEN:
-            return jsonify({'error': result}), 401
+        if (
+            result == DatabaseManager.TOKEN_EXPIRED
+            or result == DatabaseManager.INVALID_TOKEN
+        ):
+            return jsonify({"error": result}), 401
 
         return jsonify([x.to_dict() for x in result]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@api.route('/notes/<int:id>', methods=['GET'])
+@api.route("/notes/<int:id>", methods=["GET"])
 def get_note_by_id(id):
     try:
-        token = request.headers.get('Authorization').replace('Bearer', '').strip()
+        token = request.headers.get("Authorization").replace("Bearer", "").strip()
 
         result = db_manager.get_note(note_id=id, user_token=token)
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
-        if result == DatabaseManager.TOKEN_EXPIRED or result == DatabaseManager.INVALID_TOKEN:
-            return jsonify({'error': result}), 401
+        if (
+            result == DatabaseManager.TOKEN_EXPIRED
+            or result == DatabaseManager.INVALID_TOKEN
+        ):
+            return jsonify({"error": result}), 401
 
         if result == DatabaseManager.NOTE_NOT_FOUND:
-            return jsonify({'error': result}), 404
+            return jsonify({"error": result}), 404
 
         return json.dumps(result.to_dict()), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@api.route('/notes', methods=['POST'])
+@api.route("/notes", methods=["POST"])
 def create_note():
     try:
-        token = request.headers.get('Authorization').replace('Bearer', '').strip()
+        token = request.headers.get("Authorization").replace("Bearer", "").strip()
 
         data = request.json
-        title = data.get('title')
-        content = data.get('content')
+        title = data.get("title")
+        content = data.get("content")
 
         result = db_manager.create_note(user_token=token, title=title, content=content)
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
-        if result == DatabaseManager.TOKEN_EXPIRED or result == DatabaseManager.INVALID_TOKEN:
-            return jsonify({'error': result}), 401
+        if (
+            result == DatabaseManager.TOKEN_EXPIRED
+            or result == DatabaseManager.INVALID_TOKEN
+        ):
+            return jsonify({"error": result}), 401
 
-        return jsonify({'note_id': result}), 201
+        return jsonify({"note_id": result}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@api.route('/notes/<int:id>', methods=['PATCH'])
+@api.route("/notes/<int:id>", methods=["PATCH"])
 def update_note(id):
     try:
-        token = request.headers.get('Authorization').replace('Bearer', '').strip()
+        token = request.headers.get("Authorization").replace("Bearer", "").strip()
 
         data = request.json
-        title = data.get('title')
-        content = data.get('content')
+        title = data.get("title")
+        content = data.get("content")
 
-        result = db_manager.update_note(note_id=id, user_token=token, title=title, content=content)
+        result = db_manager.update_note(
+            note_id=id, user_token=token, title=title, content=content
+        )
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
-        if result == DatabaseManager.TOKEN_EXPIRED or result == DatabaseManager.INVALID_TOKEN:
-            return jsonify({'error': result}), 401
+        if (
+            result == DatabaseManager.TOKEN_EXPIRED
+            or result == DatabaseManager.INVALID_TOKEN
+        ):
+            return jsonify({"error": result}), 401
 
         if result == DatabaseManager.NOTE_NOT_FOUND:
-            return jsonify({'error': result}), 404
+            return jsonify({"error": result}), 404
 
-        return jsonify({'message': DatabaseManager.OK}), 200
+        return jsonify({"message": DatabaseManager.OK}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@api.route('/notes/<int:id>', methods=['DELETE'])
+
+@api.route("/notes/<int:id>", methods=["DELETE"])
 def delete_note(id):
     try:
-        token = request.headers.get('Authorization').replace('Bearer', '').strip()
+        token = request.headers.get("Authorization").replace("Bearer", "").strip()
 
         result = db_manager.delete_note(note_id=id, user_token=token)
 
         if result is None or result == DatabaseManager.UNKNOWN_ERROR:
-            return jsonify({'error': DatabaseManager.UNKNOWN_ERROR}), 500
+            return jsonify({"error": DatabaseManager.UNKNOWN_ERROR}), 500
 
-        if result == DatabaseManager.TOKEN_EXPIRED or result == DatabaseManager.INVALID_TOKEN:
-            return jsonify({'error': result}), 401
+        if (
+            result == DatabaseManager.TOKEN_EXPIRED
+            or result == DatabaseManager.INVALID_TOKEN
+        ):
+            return jsonify({"error": result}), 401
 
         if result == DatabaseManager.NOTE_NOT_FOUND:
-            return jsonify({'error': result}), 404
+            return jsonify({"error": result}), 404
 
-        return jsonify({'message': DatabaseManager.OK}), 200
+        return jsonify({"message": DatabaseManager.OK}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@api.route('/translate', methods=['POST'])
+@api.route("/translate", methods=["POST"])
 def translate():
     """
     Translates given text from English to Russian using Deep Translate API.
@@ -175,11 +198,14 @@ def translate():
     }
     """
 
-    token = request.headers.get('Authorization').replace('Bearer', '').strip()
+    token = request.headers.get("Authorization").replace("Bearer", "").strip()
     result = db_manager.get_user_id_from_token(token)
 
-    if result == DatabaseManager.TOKEN_EXPIRED or result == DatabaseManager.INVALID_TOKEN:
-        return jsonify({'error': result}), 401
+    if (
+        result == DatabaseManager.TOKEN_EXPIRED
+        or result == DatabaseManager.INVALID_TOKEN
+    ):
+        return jsonify({"error": result}), 401
 
     try:
         data = request.json
@@ -196,16 +222,12 @@ def translate():
             "X-RapidAPI-Key": os.getenv("DEEP_TRANSLATE_API_KEY"),
         }
 
-        payload = {
-            "q": query,
-            "source": "en",
-            "target": "ru"
-        }
+        payload = {"q": query, "source": "en", "target": "ru"}
 
         response = requests.post(
             "https://deep-translate1.p.rapidapi.com/language/translate/v2",
             headers=headers,
-            json=payload
+            json=payload,
         )
 
         if response.status_code != 200:
@@ -214,8 +236,8 @@ def translate():
 
         translated_data = response.json()
         translated_text = translated_data["data"]["translations"]["translatedText"][0]
-        
+
         return jsonify({"translation": translated_text}), 200
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
