@@ -113,7 +113,9 @@ def get_notes():
         500: { "error": "UNKNOWN_ERROR" } or other exception message
     """
     try:
-        token = request.headers.get("Authorization", "").replace("Bearer", "").strip()
+        token = request.headers.get(
+          "Authorization", "").replace(
+            "Bearer", "").strip()
         search_query = request.args.get("query", "")
 
         result = db_manager.get_all_notes(
@@ -151,10 +153,13 @@ def get_note_by_id(id):
         200: JSON string of note dict.
         401: { "error": "TOKEN_EXPIRED" } or { "error": "INVALID_TOKEN" }
         404: { "error": "NOTE_NOT_FOUND" }
-        500: { "error": "UNKNOWN_ERROR" } or other exception message
+        500: { "error": "UNKNOWN_ERROR" }
+        or other exception message
     """
     try:
-        token = request.headers.get("Authorization", "").replace("Bearer", "").strip()
+        token = request.headers.get(
+          "Authorization", "").replace(
+            "Bearer", "").strip()
 
         result = db_manager.get_note(note_id=id, user_token=token)
 
@@ -196,7 +201,9 @@ def create_note():
         500: { "error": "UNKNOWN_ERROR" } or other exception message
     """
     try:
-        token = request.headers.get("Authorization", "").replace("Bearer", "").strip()
+        token = request.headers.get(
+          "Authorization", "").replace(
+            "Bearer", "").strip()
         data = request.json
         title = data.get("title")
         content = data.get("content")
@@ -246,7 +253,8 @@ def update_note(id):
         500: { "error": "UNKNOWN_ERROR" } or other exception message
     """
     try:
-        token = request.headers.get("Authorization", "").replace("Bearer", "").strip()
+        token = request.headers.get(
+          "Authorization", "").replace("Bearer", "").strip()
         data = request.json
         title = data.get("title")
         content = data.get("content")
@@ -291,7 +299,9 @@ def delete_note(id):
         500: { "error": "UNKNOWN_ERROR" } or other exception message
     """
     try:
-        token = request.headers.get("Authorization", "").replace("Bearer", "").strip()
+        token = request.headers.get(
+          "Authorization", "").replace(
+            "Bearer", "").strip()
 
         result = db_manager.delete_note(note_id=id, user_token=token)
 
@@ -334,7 +344,9 @@ def translate():
         500: { "error": "Translation API Error (<status>)" }
         500: { "error": "<exception message>" }
     """
-    token = request.headers.get("Authorization", "").replace("Bearer", "").strip()
+    token = request.headers.get(
+      "Authorization", "").replace(
+        "Bearer", "").strip()
     result = db_manager.get_user_id_from_token(token)
 
     if (
@@ -355,7 +367,8 @@ def translate():
             "X-RapidAPI-Host": "deep-translate1.p.rapidapi.com",
             "X-RapidAPI-Key": os.getenv("DEEP_TRANSLATE_API_KEY"),
         }
-        payload = {"q": query, "source": "ru", "target": "en"}
+        payload = {"q": query, "source": "ru",
+                   "target": "en"}
 
         response = requests.post(
             "https://deep-translate1.p.rapidapi.com/language/translate/v2",
@@ -364,15 +377,18 @@ def translate():
         )
         if response.status_code != 200:
             return (
-                jsonify({"error": f"Translation API Error ({response.status_code})"}),
+                jsonify(
+                  {
+                    "error": f"Translation API Error ({response.status_code})"
+                    }),
                 500,
             )
 
         translated_data = response.json()
-        translated_text = (
-            translated_data["data"]["translations"]["translatedText"][0]
-        )
-        return jsonify({"translation": translated_text}), 200
+        translations = translated_data["data"]["translations"]
+        translated_text = translations["translatedText"][0]
+        return jsonify(
+          {"translation": translated_text}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
