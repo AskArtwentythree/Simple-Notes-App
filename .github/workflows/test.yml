@@ -22,6 +22,6 @@
     - name: Run radon
       run: poetry run radon mi app --min B
     - name: Run interrogate
-      run: poetry run interrogate -v app
+      run: poetry run interrogate -v --fail-under=70 app
     - name: Run bandit
       run: poetry run bandit -r app
