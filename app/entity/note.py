@@ -1,8 +1,16 @@
 class Note:
-    def __init__(self, note_id=None, user_id=None, title="", content="", created_at=None, updated_at=None):
+    def __init__(
+        self,
+        note_id=None,
+        user_id=None,
+        title="",
+        content="",
+        created_at=None,
+        updated_at=None
+    ):
         """
         Represents a single entry in the 'Notes' table.
-        
+
         Attributes:
             note_id (int): Unique identifier for the note.
             user_id (int): Foreign key referencing the user's ID.
@@ -30,11 +38,11 @@ class Note:
         )
 
     def to_dict(self):
-					return {
-							'id': self.note_id,  
-							'user_id': self.user_id,
-							'title': self.title,
-							'content': self.content,
-							'created_at': self.created_at,
-							'updated_at': self.updated_at
-					}
+        return {
+            'id': self.note_id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'content': self.content,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
