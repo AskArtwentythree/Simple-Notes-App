@@ -9,7 +9,6 @@ TEST_DB_NAME = "test_notes.db"
 TEST_DB_PATH = "tests"
 
 
-
 @pytest.fixture(autouse=True)
 def isolate_streamlit(monkeypatch):
     monkeypatch.setattr(st, "secrets", {}, raising=False)

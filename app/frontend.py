@@ -1,13 +1,6 @@
 import streamlit as st
 import requests
 
-"""
-Simple Notes frontend.
-
-This module implements the Streamlit UI for
-authentication, note CRUD, and translation features,
-backed by a JSON API.
-"""
 
 st.set_page_config(page_title="Simple Notes", layout="centered")
 
